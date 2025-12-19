@@ -1,4 +1,5 @@
 # Preference density × mechanism: an LLM-enabled regime shift test
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/strangeloopcanon/llm-hayek-roth)
 
 So what: this repo runs a minimal, reproducible 2×2 “field-experiment analog” showing how **LLM-based elicitation** can make preferences *easier to infer* and lower the ROI threshold (λ*) at which **centralized recommendations/matching** becomes worthwhile relative to decentralized search.
 
