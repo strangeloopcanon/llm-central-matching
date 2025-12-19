@@ -16,10 +16,10 @@ check:
 	uv run detect-secrets-hook --baseline .secrets.baseline --exclude-files '(^|/)\.env$$'
 
 test:
-	uv run pytest --cov
+	uv run python -m pytest --cov
 
 llm-live:
-	uv run pytest -q tests_llm_live
+	uv run python -m pytest -q tests_llm_live
 
 all: check test llm-live
 
