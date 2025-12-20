@@ -31,6 +31,11 @@ Quick definitions:
 - `k_I` / `k_J`: elicitation depth for customers / providers (how much structured preference signal you extract).
 - `d_hat`: preference-density proxy (how predictable acceptances are, given inferred preferences).
 
+What we measure:
+- How accurately the platform can infer who you’ll accept (a proxy for “describability” / preference density).
+- How much communication/attention is spent to get a match.
+- Net welfare under each mechanism, and the implied ROI boundary `λ*` where centralized matching starts to beat search.
+
 **Framing**
 - Not “LLMs always improve markets” (effects vary by regime).
 - Yes “LLMs can move you across a threshold where central mechanisms become viable,” summarized by the regime map ROI boundary `λ*` and the hard-category interaction.
