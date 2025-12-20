@@ -40,13 +40,33 @@ What we measure:
 - Not “LLMs always improve markets” (effects vary by regime).
 - Yes “LLMs can move you across a threshold where central mechanisms become viable,” summarized by the regime map ROI boundary `λ*` and the hard-category interaction.
 
-**Open these first**
-- `reports/paper_latest/key_results.md`: one table spanning the repo’s synthetic experiments.
-- `reports/paper_latest/fig_regime_map_hard_lambda_star.svg`: regime boundary for `λ*`.
-- `reports/paper_latest/fig_regime_map_hard_net_welfare_diff.svg`: where central beats search.
-- `reports/paper_latest/fig_hard_net_welfare.svg`: FieldSim v2 net welfare by arm (hard).
-- `reports/paper_latest/fig_hard_net_welfare_vs_saturation.svg`: delegated outreach congestion.
-- `reports/paper_latest/fig_hard_reciprocity_curve.svg`: reciprocity proxy vs rank (hard).
+## Results (inline)
+
+Headline results (from `reports/paper_latest/`):
+- FieldSim v2 (hard): net welfare per customer is highest in `ai_central` (18.58) vs 14.13–14.48 in the other arms.
+- Regime sweep (hard): `λ*` falls from 0.014 (`k_I=1,k_J=1`) to 0.0123 (`k_I=6,k_J=6`).
+- Delegated outreach congestion: saturation 1.0 vs 0.0 reduces net welfare per customer by ~0.883 (hard).
+
+Net welfare per customer (FieldSim v2, hard; higher is better):
+
+| intake | search | central |
+| --- | --- | --- |
+| standard | 14.13 | 14.48 |
+| LLM | 14.27 | 18.58 |
+
+Full table: `reports/paper_latest/key_results.md`.
+
+![Regime map: ROI boundary λ* (hard)](reports/paper_latest/fig_regime_map_hard_lambda_star.svg)
+![Regime map: Central − Search net welfare (hard)](reports/paper_latest/fig_regime_map_hard_net_welfare_diff.svg)
+![FieldSim v2: net welfare by arm (hard)](reports/paper_latest/fig_hard_net_welfare.svg)
+
+<details>
+<summary>More plots</summary>
+
+![Delegated outreach: net welfare vs saturation (hard)](reports/paper_latest/fig_hard_net_welfare_vs_saturation.svg)
+![FieldSim v2: reciprocity proxy vs rank (hard)](reports/paper_latest/fig_hard_reciprocity_curve.svg)
+
+</details>
 
 **Money/prices**
 
