@@ -3,6 +3,7 @@ Sweep preference parameters to demonstrate:
 1. As preferences become more heterogeneous (lower weight_alpha), AI×Central advantage increases
 2. Effects persist across different AI intake quality levels (ai_weight_noise_sd)
 3. Effects persist across different misclassification rates (std_weight_misclass_hard)
+4. Effects vary with utility randomness (idiosyncratic_noise_sd) — higher noise may increase AI ROI
 
 This is the corrected heterogeneity sweep that varies the RIGHT parameters.
 """
@@ -168,7 +169,7 @@ def _run_once(
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Sweep preference parameters for robustness (weight_alpha, ai_noise, misclass)"
+        description="Sweep robustness: weight_alpha, ai_noise, misclass, utility_noise"
     )
     parser.add_argument("--out", default="reports/heterogeneity_latest")
     parser.add_argument("--seed-base", type=int, default=500)
@@ -196,6 +197,12 @@ def main() -> None:
         default="0.40,0.70",
         help="Standard form misclassification rates for hard categories.",
     )
+    parser.add_argument(
+        "--utility-noise-sds",
+        type=str,
+        default="0.04,0.08,0.15",
+        help="Idiosyncratic utility noise (SD). Higher = more randomness in preferences.",
+    )
     args = parser.parse_args()
 
     out_dir = Path(args.out)
@@ -204,68 +211,78 @@ def main() -> None:
     weight_alphas = [float(a.strip()) for a in args.weight_alphas.split(",")]
     ai_noise_sds = [float(a.strip()) for a in args.ai_noise_sds.split(",")]
     misclass_rates = [float(a.strip()) for a in args.misclass_rates.split(",")]
+    utility_noise_sds = [float(a.strip()) for a in args.utility_noise_sds.split(",")]
     seeds = [args.seed_base + i for i in range(args.n_seeds)]
 
     rows: list[dict[str, RowValue]] = []
 
-    # Main sweep: weight_alpha × ai_noise × misclass × seeds
+    # Main sweep: weight_alpha × ai_noise × misclass × utility_noise × seeds
     run_count = 0
-    total_runs = len(weight_alphas) * len(ai_noise_sds) * len(misclass_rates) * len(seeds)
+    total_runs = (
+        len(weight_alphas) * len(ai_noise_sds) * len(misclass_rates)
+        * len(utility_noise_sds) * len(seeds)
+    )
 
     for weight_alpha in weight_alphas:
         for ai_noise_sd in ai_noise_sds:
             for misclass_rate in misclass_rates:
-                for seed in seeds:
-                    run_count += 1
-                    params = FieldV2Params(
-                        weight_alpha=weight_alpha,
-                        ai_weight_noise_sd=ai_noise_sd,
-                        std_weight_misclass_hard=misclass_rate,
-                        attention_cost=0.01,
-                    )
-                    log(
-                        logger,
-                        20,
-                        "heterogeneity_sweep_run",
-                        run=f"{run_count}/{total_runs}",
-                        weight_alpha=weight_alpha,
-                        ai_noise_sd=ai_noise_sd,
-                        misclass=misclass_rate,
-                        seed=seed,
-                    )
+                for utility_noise_sd in utility_noise_sds:
+                    for seed in seeds:
+                        run_count += 1
+                        params = FieldV2Params(
+                            weight_alpha=weight_alpha,
+                            ai_weight_noise_sd=ai_noise_sd,
+                            std_weight_misclass_hard=misclass_rate,
+                            idiosyncratic_noise_sd=utility_noise_sd,
+                            attention_cost=0.01,
+                        )
+                        log(
+                            logger,
+                            20,
+                            "heterogeneity_sweep_run",
+                            run=f"{run_count}/{total_runs}",
+                            weight_alpha=weight_alpha,
+                            ai_noise_sd=ai_noise_sd,
+                            misclass=misclass_rate,
+                            utility_noise=utility_noise_sd,
+                            seed=seed,
+                        )
 
-                    jobs = _run_once(
-                        seed=seed,
-                        cities=args.cities,
-                        weeks=args.weeks,
-                        jobs_easy=args.jobs_easy,
-                        jobs_hard=args.jobs_hard,
-                        providers=args.providers,
-                        params=params,
-                    )
+                        jobs = _run_once(
+                            seed=seed,
+                            cities=args.cities,
+                            weeks=args.weeks,
+                            jobs_easy=args.jobs_easy,
+                            jobs_hard=args.jobs_hard,
+                            providers=args.providers,
+                            params=params,
+                        )
 
-                    triple_coef, triple_se, triple_p = _triple_from_regression(
-                        jobs=jobs, outcome="net_welfare"
-                    )
-                    triple_match_coef, _, _ = _triple_from_regression(jobs=jobs, outcome="matched")
-                    ai_central_hard = _ai_central_mean(
-                        jobs=jobs, outcome="net_welfare", category="hard"
-                    )
+                        triple_coef, triple_se, triple_p = _triple_from_regression(
+                            jobs=jobs, outcome="net_welfare"
+                        )
+                        triple_match_coef, _, _ = _triple_from_regression(
+                            jobs=jobs, outcome="matched"
+                        )
+                        ai_central_hard = _ai_central_mean(
+                            jobs=jobs, outcome="net_welfare", category="hard"
+                        )
 
-                    rows.append(
-                        {
-                            "weight_alpha": weight_alpha,
-                            "ai_noise_sd": ai_noise_sd,
-                            "misclass_rate": misclass_rate,
-                            "seed": seed,
-                            "triple_welfare_coef": round(triple_coef, 4),
-                            "triple_welfare_se": round(triple_se, 4),
-                            "triple_welfare_p": round(triple_p, 4),
-                            "triple_match_coef": round(triple_match_coef, 4),
-                            "ai_central_hard_welfare": round(ai_central_hard, 2),
-                            "n_jobs": len(jobs),
-                        }
-                    )
+                        rows.append(
+                            {
+                                "weight_alpha": weight_alpha,
+                                "ai_noise_sd": ai_noise_sd,
+                                "misclass_rate": misclass_rate,
+                                "utility_noise_sd": utility_noise_sd,
+                                "seed": seed,
+                                "triple_welfare_coef": round(triple_coef, 4),
+                                "triple_welfare_se": round(triple_se, 4),
+                                "triple_welfare_p": round(triple_p, 4),
+                                "triple_match_coef": round(triple_match_coef, 4),
+                                "ai_central_hard_welfare": round(ai_central_hard, 2),
+                                "n_jobs": len(jobs),
+                            }
+                        )
 
     _write_csv(rows, out_dir / "runs.csv")
 
@@ -327,6 +344,26 @@ def main() -> None:
         )
     _write_csv(misclass_summary, out_dir / "summary_by_misclass.csv")
 
+    # === Analysis 4: Effect by utility_noise_sd (idiosyncratic randomness) ===
+    by_utility_noise: dict[float, list[float]] = {}
+    for r in rows:
+        by_utility_noise.setdefault(float(r["utility_noise_sd"]), []).append(
+            _as_float(r["triple_welfare_coef"])
+        )
+
+    utility_noise_summary: list[dict[str, RowValue]] = []
+    for un in sorted(by_utility_noise.keys()):
+        vals = by_utility_noise[un]
+        utility_noise_summary.append(
+            {
+                "utility_noise_sd": un,
+                "mean_triple_welfare": round(_mean(vals), 4),
+                "se_triple_welfare": round(_se(vals), 4),
+                "n_runs": len(vals),
+            }
+        )
+    _write_csv(utility_noise_summary, out_dir / "summary_by_utility_noise.csv")
+
     # === Plot 1: Triple interaction vs weight_alpha ===
     series_alpha = [
         LineSeries(
@@ -363,6 +400,24 @@ def main() -> None:
         series=series_noise,
     )
 
+    # === Plot 3: Effect by utility noise (idiosyncratic randomness) ===
+    series_utility = [
+        LineSeries(
+            label="AI×Central×Hard effect",
+            points=[
+                (float(r["utility_noise_sd"]), _as_float(r["mean_triple_welfare"]))
+                for r in utility_noise_summary
+            ],
+        )
+    ]
+    write_line_chart_svg(
+        out_path=out_dir / "fig_triple_vs_utility_noise.svg",
+        title="AI×Central advantage vs utility randomness",
+        x_label="Utility noise (SD) — higher = more randomness",
+        y_label="Triple interaction coefficient",
+        series=series_utility,
+    )
+
     # === Summary stats ===
     low_alpha_runs = [r for r in rows if _as_float(r["weight_alpha"]) <= 0.5]
     high_alpha_runs = [r for r in rows if _as_float(r["weight_alpha"]) >= 2.0]
@@ -374,11 +429,18 @@ def main() -> None:
     best_ai_mean = _mean([_as_float(r["triple_welfare_coef"]) for r in best_ai_runs])
     worst_ai_mean = _mean([_as_float(r["triple_welfare_coef"]) for r in worst_ai_runs])
 
+    # Utility noise stats
+    low_utility_runs = [r for r in rows if _as_float(r["utility_noise_sd"]) <= 0.05]
+    high_utility_runs = [r for r in rows if _as_float(r["utility_noise_sd"]) >= 0.12]
+    low_utility_mean = _mean([_as_float(r["triple_welfare_coef"]) for r in low_utility_runs])
+    high_utility_mean = _mean([_as_float(r["triple_welfare_coef"]) for r in high_utility_runs])
+
     summary = {
         "n_runs": len(rows),
         "weight_alphas": weight_alphas,
         "ai_noise_sds": ai_noise_sds,
         "misclass_rates": misclass_rates,
+        "utility_noise_sds": utility_noise_sds,
         "seeds": seeds,
         "heterogeneity_effect": {
             "low_alpha_mean_triple": round(low_alpha_mean, 4),
@@ -388,6 +450,10 @@ def main() -> None:
         "ai_quality_effect": {
             "best_ai_mean_triple": round(best_ai_mean, 4),
             "worst_ai_mean_triple": round(worst_ai_mean, 4),
+        },
+        "utility_noise_effect": {
+            "low_utility_mean_triple": round(low_utility_mean, 4),
+            "high_utility_mean_triple": round(high_utility_mean, 4),
         },
     }
     (out_dir / "summary.json").write_text(
@@ -414,6 +480,7 @@ def main() -> None:
         f"| `weight_alpha` | {weight_alphas} | Pref concentration (low=focused) |",
         f"| `ai_noise_sd` | {ai_noise_sds} | AI quality (0.03=best, 0.20=bad) |",
         f"| `misclass_rate` | {misclass_rates} | Std form misclass rate |",
+        f"| `utility_noise_sd` | {utility_noise_sds} | Utility randomness (higher=noisier) |",
         "",
         "## Results: Heterogeneity Effect",
         "",
@@ -439,8 +506,19 @@ def main() -> None:
         "- `runs.csv`: per-run results for all parameter combinations",
         "- `summary_by_alpha.csv`: effect aggregated by weight_alpha",
         "- `summary_by_ai_noise.csv`: effect aggregated by AI quality",
+        "- `summary_by_utility_noise.csv`: effect aggregated by utility randomness",
         "- `fig_triple_vs_weight_alpha.svg`: main heterogeneity result",
         "- `fig_triple_vs_ai_noise.svg`: robustness to AI quality",
+        "- `fig_triple_vs_utility_noise.svg`: effect of utility randomness",
+        "",
+        "## Results: Utility Randomness (NEW)",
+        "",
+        f"- Low noise (≤0.05): mean triple = **{low_utility_mean:.4f}**",
+        f"- High noise (≥0.12): mean triple = **{high_utility_mean:.4f}**",
+        "",
+        "*Economic interpretation*: Higher idiosyncratic noise (random utility shocks)",
+        "may increase AI+Central advantage if centralized matching better handles",
+        "preference uncertainty through information aggregation.",
         "",
         "## Run",
         "",

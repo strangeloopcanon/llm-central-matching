@@ -1,0 +1,37 @@
+{
+  "n_runs": 36,
+  "weight_alphas": [
+    0.5,
+    1.0,
+    2.0
+  ],
+  "ai_noise_sds": [
+    0.03,
+    0.15
+  ],
+  "misclass_rates": [
+    0.7
+  ],
+  "utility_noise_sds": [
+    0.04,
+    0.08,
+    0.15
+  ],
+  "seeds": [
+    500,
+    501
+  ],
+  "heterogeneity_effect": {
+    "low_alpha_mean_triple": 6.5163,
+    "high_alpha_mean_triple": 3.8909,
+    "ratio": 1.67
+  },
+  "ai_quality_effect": {
+    "best_ai_mean_triple": -2.1776,
+    "worst_ai_mean_triple": 0.0
+  },
+  "utility_noise_effect": {
+    "low_utility_mean_triple": -5.0128,
+    "high_utility_mean_triple": -2.7976
+  }
+}

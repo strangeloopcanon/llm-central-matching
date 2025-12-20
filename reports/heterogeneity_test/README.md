@@ -8,21 +8,21 @@ quality levels and misclassification rates.
 
 | Parameter | Values | Meaning |
 |---|---|---|
-| `weight_alpha` | [0.3, 0.5, 0.8, 1.0, 1.5, 2.0, 3.0] | Pref concentration (low=focused) |
-| `ai_noise_sd` | [0.03, 0.1, 0.2] | AI quality (0.03=best, 0.20=bad) |
-| `misclass_rate` | [0.4, 0.7] | Std form misclass rate |
+| `weight_alpha` | [0.5, 1.0, 2.0] | Pref concentration (low=focused) |
+| `ai_noise_sd` | [0.03, 0.15] | AI quality (0.03=best, 0.20=bad) |
+| `misclass_rate` | [0.7] | Std form misclass rate |
 | `utility_noise_sd` | [0.04, 0.08, 0.15] | Utility randomness (higher=noisier) |
 
 ## Results: Heterogeneity Effect
 
-- Low α (≤0.5) mean triple effect: **7.2736**
-- High α (≥2.0) mean triple effect: **-1.4868**
-- Ratio (low/high): **N/A**
+- Low α (≤0.5) mean triple effect: **6.5163**
+- High α (≥2.0) mean triple effect: **3.8909**
+- Ratio (low/high): **1.7×**
 
 ## Results: AI Quality Sensitivity
 
-- Best-case AI (noise=0.03): mean triple = **2.9464**
-- Pessimistic AI (noise=0.20): mean triple = **1.6497**
+- Best-case AI (noise=0.03): mean triple = **-2.1776**
+- Pessimistic AI (noise=0.20): mean triple = **0.0000**
 
 ## Interpretation
 
@@ -44,8 +44,8 @@ quality levels and misclassification rates.
 
 ## Results: Utility Randomness (NEW)
 
-- Low noise (≤0.05): mean triple = **2.2249**
-- High noise (≥0.12): mean triple = **3.2561**
+- Low noise (≤0.05): mean triple = **-5.0128**
+- High noise (≥0.12): mean triple = **-2.7976**
 
 *Economic interpretation*: Higher idiosyncratic noise (random utility shocks)
 may increase AI+Central advantage if centralized matching better handles

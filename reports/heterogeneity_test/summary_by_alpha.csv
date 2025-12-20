@@ -1,0 +1,4 @@
+weight_alpha,mean_triple_welfare,se_triple_welfare,n_runs
+0.5,6.5163,5.1271,12
+1.0,-21.699,4.6857,12
+2.0,3.8909,7.8649,12

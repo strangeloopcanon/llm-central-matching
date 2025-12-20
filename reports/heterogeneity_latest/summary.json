@@ -1,32 +1,42 @@
 {
-  "n_runs": 60,
+  "n_runs": 126,
   "weight_alphas": [
     0.3,
     0.5,
+    0.8,
     1.0,
+    1.5,
     2.0,
     3.0
   ],
   "ai_noise_sds": [
     0.03,
-    0.15
+    0.1,
+    0.2
   ],
   "misclass_rates": [
-    0.5,
+    0.4,
     0.7
   ],
+  "utility_noise_sds": [
+    0.04,
+    0.08,
+    0.15
+  ],
   "seeds": [
-    500,
-    501,
-    502
+    500
   ],
   "heterogeneity_effect": {
-    "low_alpha_mean_triple": 1.6128,
-    "high_alpha_mean_triple": -1.6673,
-    "ratio": -0.97
+    "low_alpha_mean_triple": 7.2736,
+    "high_alpha_mean_triple": -1.4868,
+    "ratio": -4.89
   },
   "ai_quality_effect": {
-    "best_ai_mean_triple": 0.1892,
-    "worst_ai_mean_triple": 0.0
+    "best_ai_mean_triple": 2.9464,
+    "worst_ai_mean_triple": 1.6497
+  },
+  "utility_noise_effect": {
+    "low_utility_mean_triple": 2.2249,
+    "high_utility_mean_triple": 3.2561
   }
 }
