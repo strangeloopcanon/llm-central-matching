@@ -1,0 +1,32 @@
+{
+  "n_runs": 60,
+  "weight_alphas": [
+    0.3,
+    0.5,
+    1.0,
+    2.0,
+    3.0
+  ],
+  "ai_noise_sds": [
+    0.03,
+    0.15
+  ],
+  "misclass_rates": [
+    0.5,
+    0.7
+  ],
+  "seeds": [
+    500,
+    501,
+    502
+  ],
+  "heterogeneity_effect": {
+    "low_alpha_mean_triple": 1.6128,
+    "high_alpha_mean_triple": -1.6673,
+    "ratio": -0.97
+  },
+  "ai_quality_effect": {
+    "best_ai_mean_triple": 0.1892,
+    "worst_ai_mean_triple": 0.0
+  }
+}

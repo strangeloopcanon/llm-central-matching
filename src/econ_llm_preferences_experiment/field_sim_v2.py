@@ -31,7 +31,7 @@ from econ_llm_preferences_experiment.plotting import (
     write_bar_chart_svg,
     write_line_chart_svg,
 )
-from econ_llm_preferences_experiment.simulation import MarketParams, draw_agent_weights
+from econ_llm_preferences_experiment.simulation import MarketParams
 
 logger = get_logger(__name__)
 
@@ -180,6 +180,13 @@ class FieldV2Params:
     std_provider_weight_misclass: float = 0.45
     value_scale_easy: float = 500.0
     value_scale_hard: float = 1100.0
+    # Dirichlet alpha for attribute heterogeneity: lower = more concentrated attributes
+    dirichlet_alpha: float = 1.2
+    # Dirichlet alpha for preference weight heterogeneity:
+    # lower = more concentrated (cares about ONE thing)
+    weight_alpha: float = 1.0
+    # AI intake noise (SD): lower = better AI elicitation, 0.03 is best-case
+    ai_weight_noise_sd: float = 0.03
 
 
 @dataclass(frozen=True)
@@ -272,6 +279,9 @@ def _params_with_overrides(base: FieldV2Params, overrides: dict[str, Any]) -> Fi
         "std_provider_weight_misclass",
         "value_scale_easy",
         "value_scale_hard",
+        "dirichlet_alpha",
+        "weight_alpha",
+        "ai_weight_noise_sd",
     )
     for k in int_fields:
         data[k] = int(data[k])
@@ -296,13 +306,41 @@ def _weights_standard_from_truth(weights: tuple[float, ...]) -> tuple[float, ...
     return tuple(x / total for x in out)
 
 
-def _weights_ai_from_truth(*, rng: random.Random, weights: tuple[float, ...]) -> tuple[float, ...]:
-    # AI intake elicits a richer preference profile: close to truth with small noise.
-    noisy = [max(0.0, w + rng.gauss(0.0, 0.03)) for w in weights]
+def _weights_ai_from_truth(
+    *, rng: random.Random, weights: tuple[float, ...], noise_sd: float = 0.03
+) -> tuple[float, ...]:
+    # AI intake elicits a richer preference profile: close to truth with configurable noise.
+    # Lower noise_sd = better AI elicitation (0.03 is best-case, 0.15 is pessimistic).
+    noisy = [max(0.0, w + rng.gauss(0.0, noise_sd)) for w in weights]
     s = sum(noisy)
     if s <= 0.0:
         return tuple(1.0 / len(noisy) for _ in noisy)
     return tuple(x / s for x in noisy)
+
+
+def _draw_weights_dirichlet(
+    rng: random.Random, *, k: int, alpha: float, category: Category
+) -> tuple[float, ...]:
+    """
+    Draw preference weights from Dirichlet(alpha, ..., alpha).
+    Lower alpha = more concentrated (person cares about ONE thing).
+    Higher alpha = more diffuse (person cares about everything equally).
+
+    For 'easy' categories, we zero out non-top-3 weights (simulating simpler preferences).
+    """
+    draws = [rng.gammavariate(alpha, 1.0) for _ in range(k)]
+    total = sum(draws)
+    weights = [1.0 / k for _ in range(k)] if total <= 0 else [x / total for x in draws]
+
+    if category == "easy":
+        # Easy categories: only top-3 dimensions matter
+        top = sorted(range(k), key=lambda idx: weights[idx], reverse=True)[:3]
+        weights = [weights[i] if i in top else 0.0 for i in range(k)]
+        total = sum(weights)
+        if total > 0:
+            weights = [w / total for w in weights]
+
+    return tuple(weights)
 
 
 def _draw_budget(rng: random.Random, *, category: Category) -> float:
@@ -365,8 +403,10 @@ def _make_provider_pool(
 
     for j in range(n_providers):
         provider_id = f"{city_id}_p{j:03d}"
-        weights = draw_agent_weights(rng, category="hard")
-        attributes = _dirichlet(rng, len(DIMENSIONS), alpha=1.2)
+        weights = _draw_weights_dirichlet(
+            rng, k=len(DIMENSIONS), alpha=params.weight_alpha, category="hard"
+        )
+        attributes = _dirichlet(rng, len(DIMENSIONS), alpha=params.dirichlet_alpha)
         cost_base = _provider_cost_base(rng, attributes)
         schedule = frozenset(rng.sample(list(range(n_slots)), k=max(2, int(0.65 * n_slots))))
         licensed = rng.random() < 0.72
@@ -412,7 +452,9 @@ def _make_provider_pool(
 
         ai = SpecProvider(
             provider_id=provider_id,
-            weights_hat=_weights_ai_from_truth(rng=rng, weights=weights),
+            weights_hat=_weights_ai_from_truth(
+                rng=rng, weights=weights, noise_sd=params.ai_weight_noise_sd
+            ),
             cost_base_hat=cost_base * float(rng.lognormvariate(0.0, 0.06)),
             schedule_slots_hat=schedule,
             licensed_hat=licensed,
@@ -440,8 +482,10 @@ def _make_jobs_for_cell(
     for i in range(n_jobs):
         job_id = f"{cell_id}_c{i:03d}"
         task = _sample_task(rng, category=category)
-        weights = draw_agent_weights(rng, category=category)
-        attributes = _dirichlet(rng, len(DIMENSIONS), alpha=1.2)
+        weights = _draw_weights_dirichlet(
+            rng, k=len(DIMENSIONS), alpha=params.weight_alpha, category=category
+        )
+        attributes = _dirichlet(rng, len(DIMENSIONS), alpha=params.dirichlet_alpha)
         budget_true = _draw_budget_for_task(rng=rng, task=task)
         complexity = _draw_complexity_for_task(rng=rng, task=task)
         weirdness = _draw_weirdness_for_task(rng=rng, task=task, complexity=complexity)
@@ -571,7 +615,9 @@ def _make_jobs_for_cell(
 
         spec_ai[job_id] = SpecJob(
             job_id=job_id,
-            weights_hat=_weights_ai_from_truth(rng=rng, weights=weights),
+            weights_hat=_weights_ai_from_truth(
+                rng=rng, weights=weights, noise_sd=params.ai_weight_noise_sd
+            ),
             budget_reported=float(round(budget_reported_ai / 10.0) * 10.0),
             schedule_slots_reported=frozenset(schedule_ai),
             requires_license_reported=req_license_reported,

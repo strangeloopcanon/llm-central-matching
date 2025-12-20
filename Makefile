@@ -1,4 +1,4 @@
-.PHONY: setup format check test llm-live all experiment regime congestion field field-v2 field-v2-sensitivity ablations intakes calibrate field-v2-calibrated paper-bundle clean
+.PHONY: setup format check test llm-live all experiment regime congestion field field-v2 field-v2-sensitivity ablations intakes calibrate field-v2-calibrated paper-bundle heterogeneity clean
 
 setup:
 	uv venv
@@ -55,6 +55,9 @@ field-v2-calibrated: calibrate
 
 paper-bundle:
 	uv run python -m econ_llm_preferences_experiment.paper_bundle --out reports/paper_latest
+
+heterogeneity:
+	uv run python -m econ_llm_preferences_experiment.field_sim_v2_heterogeneity --out reports/heterogeneity_latest
 
 clean:
 	rm -rf .mypy_cache .pytest_cache .ruff_cache reports/latest reports/latest_congestion reports/field_latest reports/field_v2_latest reports/field_v2_sensitivity_latest reports/ablations_latest reports/intakes_latest reports/field_v2_calibration_latest reports/field_v2_calibrated_latest reports/paper_latest
