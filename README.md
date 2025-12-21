@@ -159,6 +159,7 @@ make experiment        # Experiment 1
 make ablations         # Experiment 2
 make congestion        # Experiment 3
 make heterogeneity-llm # Experiment 4
+make experiment5       # Experiment 5
 make paper-bundle-llm  # Generate summary
 ```
 
