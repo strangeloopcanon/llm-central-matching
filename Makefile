@@ -65,5 +65,8 @@ heterogeneity:
 heterogeneity-llm:
 	uv run python -m econ_llm_preferences_experiment.heterogeneity_llm --out reports/heterogeneity_llm_latest
 
+experiment5:
+	uv run python -m econ_llm_preferences_experiment.experiment5_pricing --out reports/experiment5_pricing
+
 clean:
 	rm -rf .mypy_cache .pytest_cache .ruff_cache reports/latest reports/latest_congestion reports/field_latest reports/field_v2_latest reports/field_v2_sensitivity_latest reports/ablations_latest reports/intakes_latest reports/field_v2_calibration_latest reports/field_v2_calibrated_latest reports/paper_latest

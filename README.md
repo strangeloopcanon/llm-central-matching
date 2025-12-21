@@ -10,7 +10,7 @@ This repo investigates whether better AI intake tips the cost-benefit balance to
 
 ---
 
-## Four Experiments
+## Five Experiments
 
 | # | Experiment | Question | Finding |
 |---|------------|----------|---------|
@@ -18,6 +18,7 @@ This repo investigates whether better AI intake tips the cost-benefit balance to
 | 2 | [Ablations](#experiment-2-where-does-llm-value-come-from) | Where does LLM value come from? | Parsing > Conversation (+11% vs +4%) |
 | 3 | [Congestion](#experiment-3-what-breaks-at-scale) | What breaks at scale? | Externality kills gains (-88% at full adoption) |
 | 4 | [Heterogeneity](#experiment-4-does-preference-uncertainty-matter) | Does preference uncertainty matter? | Small effect, dominated by other factors |
+| 5 | [Pricing](#experiment-5-can-pricing-fix-congestion) | Can pricing fix congestion? | **Yes, +77% welfare recovery** |
 
 📊 Full results: [`reports/paper_llm_latest/`](reports/paper_llm_latest/README.md)
 
@@ -109,18 +110,38 @@ make heterogeneity-llm
 
 ---
 
+## Experiment 5: Can Pricing Fix Congestion?
+
+**Question**: If congestion kills welfare gains, can a pricing mechanism restore them?
+
+Inspired by [barter_to_money](https://github.com/strangeloopcanon/barter_to_money): money/exchange achieves 100% success vs 62.5% for barter by collapsing O(N²) to O(N).
+
+| Pricing Mode | Net Welfare | Inbox/Day | Recovery |
+|--------------|-------------|-----------|----------|
+| None (baseline) | -0.654 | 10.6 | — |
+| Fixed pricing | **-0.152** | 2.9 | **+77%** |
+| Dynamic pricing | -0.159 | 2.9 | +76% |
+
+**Pricing works.** Provider inbox drops from 10.6 → 2.9 messages/day. Welfare recovers 77%.
+
+```bash
+make experiment5
+```
+
+---
+
 ## Bottom Line
 
-> **LLM-powered preference elicitation enables centralized matching in hard-to-describe markets, but the effect is modest (~0.2%). The bigger story is congestion: widespread AI-delegated outreach can hurt everyone.**
+> **LLM-powered preference elicitation enables centralized matching in hard-to-describe markets. Congestion is a real threat at scale, but pricing mechanisms can recover most of the lost welfare.**
 
 ### When AI+Central Works
 - Hard-to-describe categories (home renovation, custom services)
-- Heterogeneous preferences (people want very different things)
-- Low saturation (not everyone using AI agents)
+- Heterogeneous preferences (people want different things)
+- Low saturation OR pricing mechanisms to manage congestion
 
 ### When It Doesn't
 - Easy categories (simple, standardized needs)
-- High saturation (congestion externality)
+- High saturation without pricing (congestion externality)
 - Homogeneous preferences (any match is fine)
 
 ---

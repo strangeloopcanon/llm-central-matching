@@ -1,0 +1,7 @@
+category,pricing_mode,saturation,match_rate_all,match_rate_all_se,messages_sent_per_customer,inbox_per_provider_per_day,provider_response_rate,net_welfare_per_customer,net_welfare_per_customer_se,avg_price_paid,budget_utilization
+easy,none,1.0,0.133,0.007,37.221,10.635,0.019,-0.646,0.007,0.0,0.0
+easy,fixed,1.0,0.062,0.005,10.0,2.857,0.014,-0.15,0.004,0.05,1.0
+easy,dynamic,1.0,0.053,0.005,10.0,2.857,0.013,-0.157,0.004,0.05,1.0
+hard,none,1.0,0.126,0.007,37.367,10.676,0.018,-0.654,0.009,0.0,0.0
+hard,fixed,1.0,0.059,0.006,10.0,2.857,0.014,-0.152,0.005,0.05,1.0
+hard,dynamic,1.0,0.05,0.006,10.0,2.857,0.013,-0.159,0.005,0.05,1.0

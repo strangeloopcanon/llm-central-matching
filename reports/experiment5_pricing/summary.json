@@ -1,0 +1,9 @@
+{
+  "seed": 42,
+  "n_cells": 30,
+  "baseline_welfare_hard": -0.654,
+  "fixed_welfare_hard": -0.152,
+  "dynamic_welfare_hard": -0.159,
+  "fixed_recovery_pct": 76.8,
+  "dynamic_recovery_pct": 75.7
+}
