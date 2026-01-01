@@ -299,4 +299,3 @@ def parse_weights_batch_with_gpt(
         weights_by_id[agent_id] = weights
 
     return ParsedWeightsBatch(weights_by_id=weights_by_id, usage=resp.usage)
-

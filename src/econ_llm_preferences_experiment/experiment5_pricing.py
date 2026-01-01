@@ -153,8 +153,7 @@ def _simulate_with_pricing(
 
             base_scores = vhat_customer_ai[i] if is_treated else vhat_customer_standard[i]
             noise_sd = (
-                params.agent_ranking_noise_sd if is_treated
-                else params.manual_ranking_noise_sd
+                params.agent_ranking_noise_sd if is_treated else params.manual_ranking_noise_sd
             )
 
             # Score and rank providers
@@ -262,20 +261,23 @@ def _simulate_with_pricing(
         return sum(1 for i in indices if matched_provider[i] is not None) / len(indices)
 
     def mean_days(indices: list[int]) -> float:
-        days = [match_day[i] for i in indices if match_day[i] is not None]
+        days: list[int] = []
+        for idx in indices:
+            d = match_day[idx]
+            if d is not None:
+                days.append(d)
         return sum(days) / len(days) if days else float(params.horizon_days)
 
     # Welfare calculation
     total_value = 0.0
     for i in matched_indices:
-        j = matched_provider[i]
-        if j is not None:
-            total_value += v_customer_true[i][j] + v_provider_true[j][i]
+        provider_idx = matched_provider[i]
+        if provider_idx is not None:
+            total_value += v_customer_true[i][provider_idx] + v_provider_true[provider_idx][i]
 
     total_actions = messages_sent + provider_inbox_total + responses_sent
     net_welfare = (
-        (total_value / n_c) - params.attention_cost * (total_actions / n_c)
-        if n_c else 0.0
+        (total_value / n_c) - params.attention_cost * (total_actions / n_c) if n_c else 0.0
     )
 
     # Pricing mode label
@@ -290,12 +292,8 @@ def _simulate_with_pricing(
     total_budget = sum(params.agent_budget for i in treated)
     budget_util = total_price_paid / total_budget if total_budget > 0 else 0.0
 
-    inbox_per_day = (
-        provider_inbox_total / (n_p * params.horizon_days) if n_p else 0.0
-    )
-    response_rate = (
-        responses_sent / provider_inbox_total if provider_inbox_total else 0.0
-    )
+    inbox_per_day = provider_inbox_total / (n_p * params.horizon_days) if n_p else 0.0
+    response_rate = responses_sent / provider_inbox_total if provider_inbox_total else 0.0
 
     return PricingOutcomes(
         saturation=saturation,
@@ -476,7 +474,7 @@ def main() -> None:
         welfare_pts = []
         for i, m in enumerate(modes):
             val = next(r["net_welfare_per_customer"] for r in cat_rows if r["pricing_mode"] == m)
-            welfare_pts.append((i, float(val)))
+            welfare_pts.append((float(i), float(val)))
         write_line_chart_svg(
             out_path=out_dir / f"fig_{category}_welfare_by_pricing.svg",
             title=f"Net welfare by pricing mode ({category}, saturation=100%)",
@@ -487,17 +485,17 @@ def main() -> None:
 
     # Generate README
     hard_rows = [r for r in all_rows if r["category"] == "hard"]
-    baseline_welfare = next(
-        r["net_welfare_per_customer"] for r in hard_rows if r["pricing_mode"] == "none"
+    baseline_welfare = float(
+        next(r["net_welfare_per_customer"] for r in hard_rows if r["pricing_mode"] == "none")
     )
-    fixed_welfare = next(
-        r["net_welfare_per_customer"] for r in hard_rows if r["pricing_mode"] == "fixed"
+    fixed_welfare = float(
+        next(r["net_welfare_per_customer"] for r in hard_rows if r["pricing_mode"] == "fixed")
     )
-    dynamic_welfare = next(
-        r["net_welfare_per_customer"] for r in hard_rows if r["pricing_mode"] == "dynamic"
+    dynamic_welfare = float(
+        next(r["net_welfare_per_customer"] for r in hard_rows if r["pricing_mode"] == "dynamic")
     )
 
-    if baseline_welfare:
+    if baseline_welfare != 0.0:
         fixed_recovery = ((fixed_welfare - baseline_welfare) / abs(baseline_welfare)) * 100
         dynamic_recovery = ((dynamic_welfare - baseline_welfare) / abs(baseline_welfare)) * 100
     else:
@@ -519,10 +517,12 @@ def main() -> None:
 ## Key Finding
 
 {
-"Pricing significantly recovers welfare lost to congestion." if dynamic_recovery > 50 else
-"Pricing partially recovers welfare, but congestion effects persist." if dynamic_recovery > 10 else
-"Pricing has limited effect on the congestion externality."
-}
+        "Pricing significantly recovers welfare lost to congestion."
+        if dynamic_recovery > 50
+        else "Pricing partially recovers welfare, but congestion effects persist."
+        if dynamic_recovery > 10
+        else "Pricing has limited effect on the congestion externality."
+    }
 
 ## Full Results
 

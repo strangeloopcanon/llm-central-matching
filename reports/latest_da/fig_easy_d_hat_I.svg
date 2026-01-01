@@ -1,0 +1,25 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='900' height='420'>
+<style>
+text{font-family: ui-sans-serif, system-ui; fill:#111827;}
+.axis{stroke:#6b7280; stroke-width:1}
+.bar{fill:#2563eb}
+.title{font-size:18px; font-weight:700}
+.label{font-size:12px;}
+</style>
+<text class='title' x='80' y='28'>Customer preference density proxy d̂_I (easy)</text>
+<line class='axis' x1='80' y1='50' x2='80' y2='340'/>
+<line class='axis' x1='80' y1='340' x2='880' y2='340'/>
+<text class='label' x='10' y='65'>d_hat_I</text>
+<rect class='bar' x='110.0' y='76.7' width='140.0' height='263.3'/>
+<text class='label' x='180.0' y='358' text-anchor='middle'>ai_central</text>
+<text class='label' x='180.0' y='70.7' text-anchor='middle'>0.803</text>
+<rect class='bar' x='310.0' y='76.7' width='140.0' height='263.3'/>
+<text class='label' x='380.0' y='358' text-anchor='middle'>ai_search</text>
+<text class='label' x='380.0' y='70.7' text-anchor='middle'>0.803</text>
+<rect class='bar' x='510.0' y='76.4' width='140.0' height='263.6'/>
+<text class='label' x='580.0' y='358' text-anchor='middle'>standard_central</text>
+<text class='label' x='580.0' y='70.4' text-anchor='middle'>0.804</text>
+<rect class='bar' x='710.0' y='76.4' width='140.0' height='263.6'/>
+<text class='label' x='780.0' y='358' text-anchor='middle'>standard_search</text>
+<text class='label' x='780.0' y='70.4' text-anchor='middle'>0.804</text>
+</svg>

@@ -225,9 +225,7 @@ def main() -> None:
         "llm_model": "gpt-5.2",
         "synthetic_results_included": False,
     }
-    (out_dir / "summary.json").write_text(
-        json.dumps(summary, indent=2) + "\n", encoding="utf-8"
-    )
+    (out_dir / "summary.json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
 
     log(logger, 20, "paper_bundle_llm_written", out_dir=str(out_dir), n_rows=len(key_rows))
 

@@ -1,4 +1,4 @@
-.PHONY: setup format check test llm-live all experiment regime congestion field field-v2 field-v2-sensitivity ablations intakes calibrate field-v2-calibrated paper-bundle heterogeneity clean
+.PHONY: setup format check test llm-live all experiment experiment-da roth-da regime congestion field field-v2 field-v2-sensitivity ablations intakes calibrate field-v2-calibrated paper-bundle heterogeneity clean
 
 setup:
 	uv venv
@@ -25,6 +25,12 @@ all: check test llm-live
 
 experiment:
 	uv run python -m econ_llm_preferences_experiment.run --out reports/latest
+
+experiment-da:
+	uv run python -m econ_llm_preferences_experiment.run --out reports/latest_da --central-mechanism da
+
+roth-da:
+	uv run python -m econ_llm_preferences_experiment.roth_da_sweep --out reports/roth_da_latest
 
 regime:
 	uv run python -m econ_llm_preferences_experiment.regime_sweep --out reports/latest --category hard

@@ -7,7 +7,7 @@ import math
 import random
 from dataclasses import asdict
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from econ_llm_preferences_experiment.analysis import Metrics, compute_metrics
 from econ_llm_preferences_experiment.elicitation import (
@@ -18,9 +18,11 @@ from econ_llm_preferences_experiment.elicitation import (
 from econ_llm_preferences_experiment.logging_utils import get_logger, log
 from econ_llm_preferences_experiment.mechanisms import (
     CentralizedParams,
+    DeferredAcceptanceParams,
     SearchParams,
     centralized_recommendations,
     decentralized_search,
+    deferred_acceptance,
 )
 from econ_llm_preferences_experiment.models import DIMENSIONS, Category
 from econ_llm_preferences_experiment.openai_client import OpenAIClient
@@ -34,6 +36,8 @@ from econ_llm_preferences_experiment.simulation import (
 )
 
 logger = get_logger(__name__)
+
+CentralMechanism = Literal["recs", "da"]
 
 
 def _write_markdown_table(rows: list[dict[str, object]], out_path: Path) -> None:
@@ -82,6 +86,8 @@ def run_once(
     replications: int,
     seed: int,
     attention_cost: float,
+    central_mechanism: CentralMechanism = "recs",
+    da_proposer_side: Literal["customer", "provider"] = "customer",
 ) -> tuple[list[dict[str, object]], dict[str, object]]:
     rng = random.Random(seed)  # nosec B311
     customers, providers = generate_population(
@@ -123,6 +129,8 @@ def run_once(
         "accept_threshold": market_params.accept_threshold,
         "epsilon": market_params.epsilon,
         "attention_cost": attention_cost,
+        "central_mechanism": central_mechanism,
+        "da_proposer_side": da_proposer_side,
     }
 
     arm_metrics: dict[str, list[Metrics]] = {
@@ -203,14 +211,26 @@ def run_once(
                 (tv_sum / n_customers) - attention_cost * (attn_total / n_customers)
             )
 
-            outcome_central = centralized_recommendations(
-                v_customer_true=market.v_customer,
-                v_provider_true=market.v_provider,
-                v_customer_hat=vhat_c,
-                v_provider_hat=vhat_p,
-                accept_threshold=market_params.accept_threshold,
-                params=CentralizedParams(rec_k=3),
-            )
+            if central_mechanism == "recs":
+                outcome_central = centralized_recommendations(
+                    v_customer_true=market.v_customer,
+                    v_provider_true=market.v_provider,
+                    v_customer_hat=vhat_c,
+                    v_provider_hat=vhat_p,
+                    accept_threshold=market_params.accept_threshold,
+                    params=CentralizedParams(rec_k=3),
+                )
+            elif central_mechanism == "da":
+                outcome_central = deferred_acceptance(
+                    v_customer_true=market.v_customer,
+                    v_provider_true=market.v_provider,
+                    v_customer_hat=vhat_c,
+                    v_provider_hat=vhat_p,
+                    accept_threshold=market_params.accept_threshold,
+                    params=DeferredAcceptanceParams(proposer_side=da_proposer_side),
+                )
+            else:
+                raise ValueError(f"Unknown central_mechanism: {central_mechanism}")
             metrics_central = compute_metrics(
                 outcome=outcome_central,
                 v_customer_true=market.v_customer,
@@ -429,10 +449,21 @@ def _write_report(
         m_std = metric(category, "standard_central", "match_rate")
         m_ai = metric(category, "ai_central", "match_rate")
         did = interaction[category]["match_rate_interaction"]
+        nw_s_std = metric(category, "standard_search", "net_welfare_per_customer")
+        nw_c_std = metric(category, "standard_central", "net_welfare_per_customer")
+        nw_s_ai = metric(category, "ai_search", "net_welfare_per_customer")
+        nw_c_ai = metric(category, "ai_central", "net_welfare_per_customer")
+        nw_did = (nw_c_ai - nw_c_std) - (nw_s_ai - nw_s_std)
         diagnostic_lines.extend(
             [
                 f"- {category}: d̂_I {d_i_std:.3f} → {d_i_ai:.3f}; d̂_J {d_j_std:.3f} → {d_j_ai:.3f}",
                 f"  central match_rate {m_std:.3f} → {m_ai:.3f}; DiD {did:+.3f}",
+                (
+                    f"  net_welfare/customer (central - search): "
+                    f"standard {(nw_c_std - nw_s_std):+.3f}; "
+                    f"ai {(nw_c_ai - nw_s_ai):+.3f}; "
+                    f"DiD {nw_did:+.3f}"
+                ),
             ]
         )
 
@@ -452,13 +483,47 @@ def _write_report(
         if ls_std is not None and ls_ai is not None:
             lambda_lines.append(f"- {category}: λ* standard={ls_std:.4f}, ai={ls_ai:.4f}")
 
+    central_mechanism: str | None = None
+    da_proposer_side: str | None = None
+
+    def _maybe_set_mechanism(meta_obj: object) -> None:
+        nonlocal central_mechanism, da_proposer_side
+        if not isinstance(meta_obj, dict):
+            return
+        cm = meta_obj.get("central_mechanism")
+        if isinstance(cm, str):
+            central_mechanism = cm
+        proposer = meta_obj.get("da_proposer_side")
+        if isinstance(proposer, str):
+            da_proposer_side = proposer
+
+    _maybe_set_mechanism(metadata)
+    _maybe_set_mechanism(metadata.get("category_easy"))
+    _maybe_set_mechanism(metadata.get("category_hard"))
+
+    if central_mechanism == "da":
+        proposer = f", proposer={da_proposer_side}" if da_proposer_side else ""
+        mechanism_line = f"Mechanism: central = deferred acceptance (stable matching){proposer}."
+        so_what_lines = [
+            "So what: Roth-style benchmark (stable matching under hat-based rankings).",
+            "We apply a mutual acceptability cutoff, and centralization is very attention-light.",
+            "Focus on the net-welfare gap and the ROI boundary (λ*).",
+        ]
+    else:
+        mechanism_line = "Mechanism: central = top‑k recommendations + max-cardinality matching."
+        so_what_lines = [
+            "So what: AI elicitation raises the preference-density proxies (d̂_I, d̂_J),",
+            "and disproportionately improves centralized recommendations in",
+            "low-describability categories.",
+        ]
+
     readme = "\n".join(
         [
             "# Latest run",
             "",
-            "So what: AI elicitation raises the preference-density proxies (d̂_I, d̂_J),",
-            "and disproportionately improves centralized recommendations in",
-            "low-describability categories.",
+            mechanism_line,
+            "",
+            *so_what_lines,
             "",
             "Key diagnostics (match_rate DiD):",
             *diagnostic_lines,
@@ -508,6 +573,18 @@ def main() -> None:
     parser.add_argument("--replications", type=int, default=200)
     parser.add_argument("--seed", type=int, default=7)
     parser.add_argument("--attention-cost", type=float, default=0.01)
+    parser.add_argument(
+        "--central-mechanism",
+        choices=["recs", "da"],
+        default="recs",
+        help="Central mechanism: 'recs' (top-k recs + max matching) or 'da' (deferred acceptance).",
+    )
+    parser.add_argument(
+        "--da-proposer-side",
+        choices=["customer", "provider"],
+        default="customer",
+        help="Only used when --central-mechanism=da.",
+    )
     args = parser.parse_args()
 
     out_dir = Path(args.out)
@@ -536,6 +613,8 @@ def main() -> None:
             replications=args.replications,
             seed=args.seed,
             attention_cost=args.attention_cost,
+            central_mechanism=args.central_mechanism,
+            da_proposer_side=args.da_proposer_side,
         )
         all_rows.extend(rows)
         meta[f"category_{category}"] = cat_meta
