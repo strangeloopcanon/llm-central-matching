@@ -1,0 +1,9 @@
+category,arm,elicitation,mechanism,d_hat_I,d_hat_I_se,d_hat_J,d_hat_J_se,match_rate,match_rate_se,mean_total_value,mean_total_value_se,mean_rounds,proposals_per_match,accept_decisions_per_match,attention_per_match,total_value_per_customer,total_value_per_customer_se,attention_per_customer,attention_per_customer_se,net_welfare_per_customer,net_welfare_per_customer_se
+easy,standard_search,standard,search,0.804,0.001,0.801,0.001,0.616,0.004,0.667,0.002,30.0,24.757,0.0,24.757,0.411,0.003,14.953,0.105,0.261,0.004
+easy,standard_central,standard,central,0.804,0.001,0.801,0.001,0.619,0.005,0.657,0.001,12.345,7.307,0.0,7.307,0.407,0.003,4.465,0.028,0.362,0.003
+easy,ai_search,ai,search,0.803,0.001,0.803,0.001,0.616,0.004,0.667,0.002,30.0,24.742,0.0,24.742,0.411,0.003,14.941,0.104,0.261,0.004
+easy,ai_central,ai,central,0.803,0.001,0.803,0.001,0.619,0.005,0.657,0.001,12.36,7.3,0.0,7.3,0.407,0.003,4.461,0.028,0.362,0.003
+hard,standard_search,standard,search,0.795,0.001,0.794,0.001,0.6,0.004,0.661,0.002,30.0,26.308,0.0,26.308,0.397,0.003,15.488,0.106,0.242,0.004
+hard,standard_central,standard,central,0.795,0.001,0.794,0.001,0.603,0.004,0.652,0.002,12.135,7.299,0.0,7.299,0.393,0.003,4.342,0.029,0.35,0.003
+hard,ai_search,ai,search,0.802,0.001,0.799,0.001,0.601,0.004,0.661,0.002,30.0,26.182,0.0,26.182,0.397,0.003,15.437,0.106,0.243,0.004
+hard,ai_central,ai,central,0.802,0.001,0.799,0.001,0.603,0.005,0.652,0.002,12.185,7.3,0.0,7.3,0.393,0.003,4.343,0.03,0.35,0.003

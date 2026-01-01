@@ -153,8 +153,7 @@ def run_once_with_llm(
                 params=SearchParams(max_rounds=30),
             )
             tv_sum = sum(
-                market.v_customer[i][j] + market.v_provider[j][i]
-                for i, j in outcome_search.matches
+                market.v_customer[i][j] + market.v_provider[j][i] for i, j in outcome_search.matches
             )
             attn_total = outcome_search.proposals + outcome_search.accept_decisions
             net_welfare[_arm_label(elicitation, "search")].append(
@@ -205,9 +204,7 @@ def _write_csv(rows: list[dict[str, RowValue]], out_path: Path) -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="LLM-backed heterogeneity sweep (real GPT calls)"
-    )
+    parser = argparse.ArgumentParser(description="LLM-backed heterogeneity sweep (real GPT calls)")
     parser.add_argument("--out", default="reports/heterogeneity_llm_latest")
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--replications", type=int, default=50)

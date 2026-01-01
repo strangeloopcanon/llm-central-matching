@@ -13,6 +13,7 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import math
 import random
 from pathlib import Path
 from typing import Any, TypeAlias
@@ -51,7 +52,7 @@ def _se(xs: list[float]) -> float:
         return 0.0
     m = _mean(xs)
     variance = sum((x - m) ** 2 for x in xs) / (len(xs) - 1)
-    return (variance / len(xs)) ** 0.5
+    return math.sqrt(variance / len(xs))
 
 
 def _write_csv(rows: list[dict[str, RowValue]], out_path: Path) -> None:
@@ -219,8 +220,11 @@ def main() -> None:
     # Main sweep: weight_alpha × ai_noise × misclass × utility_noise × seeds
     run_count = 0
     total_runs = (
-        len(weight_alphas) * len(ai_noise_sds) * len(misclass_rates)
-        * len(utility_noise_sds) * len(seeds)
+        len(weight_alphas)
+        * len(ai_noise_sds)
+        * len(misclass_rates)
+        * len(utility_noise_sds)
+        * len(seeds)
     )
 
     for weight_alpha in weight_alphas:

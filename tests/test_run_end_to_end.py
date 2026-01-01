@@ -77,3 +77,23 @@ def test_run_once_and_write_report(tmp_path) -> None:
     assert (out_dir / "summary_table.md").exists()
     assert (out_dir / "README.md").exists()
     assert (out_dir / "fig_easy_match_rate.svg").exists()
+
+
+def test_run_once_with_deferred_acceptance_central(tmp_path) -> None:
+    client = FakeOpenAIClient()
+    params = MarketParams(n_customers=6, n_providers=6)
+    rows, meta = run_once(
+        category="easy",
+        client=client,
+        market_params=params,
+        replications=3,
+        seed=1,
+        attention_cost=0.01,
+        central_mechanism="da",
+        da_proposer_side="customer",
+    )
+    assert len(rows) == 4
+
+    out_dir = tmp_path / "report_da"
+    _write_report(out_dir=out_dir, summary_rows=rows, effects_rows=None, metadata=meta)
+    assert (out_dir / "summary_table.csv").exists()

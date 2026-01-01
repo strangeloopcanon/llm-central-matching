@@ -156,6 +156,8 @@ uv sync
 echo 'OPENAI_API_KEY="sk-..."' >> .env
 
 make experiment        # Experiment 1
+make experiment-da     # Experiment 1 (DA central; no preference-report cost)
+make roth-da           # Roth-style DA sweep over rank-list length k
 make ablations         # Experiment 2
 make congestion        # Experiment 3
 make heterogeneity-llm # Experiment 4
