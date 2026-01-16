@@ -25,13 +25,8 @@ venv/
 .coverage
 .coverage.*
 
-# Beads (keep issues.jsonl/metadata/config tracked)
-.beads/*.db*
-.beads/daemon.lock
-.beads/daemon.log
-.beads/daemon.pid
-.beads/bd.sock
-.beads/.local_version
+# Beads (local-only)
+.beads/
 
 # macOS
 .DS_Store
